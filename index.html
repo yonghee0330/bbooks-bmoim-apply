@@ -632,80 +632,13 @@
 </footer>
 
 <script>
-  // ⚠️ Apps Script 배포 후 받은 웹 앱 URL로 교체하세요
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFDKZu2Nr4G00QSi3a8bD_be0xkTeXCjocJdaf7X8vGTPV0zD5qK1s-Yeh8nuLWvI/exec';
 
   const form = document.getElementById('apply-form');
   const submitBtn = document.getElementById('submit-btn');
   const successMsg = document.getElementById('success-msg');
   const errorMsg = document.getElementById('error-msg');
-  const uploadZone = document.getElementById('upload-zone');
-  const posterFileInput = document.getElementById('posterFile');
-  const uploadPreview = document.getElementById('upload-preview');
-  const previewImg = document.getElementById('preview-img');
-  const previewName = document.getElementById('preview-name');
-  const removeFileBtn = document.getElementById('remove-file');
-  const uploadProgress = document.getElementById('upload-progress');
 
-  let posterData = null; // { base64, fileName, mimeType }
-
-  // ── 파일 선택 처리 ──
-  function handleFile(file) {
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다 (JPG, PNG, GIF, WEBP)');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('파일 크기는 5MB 이하로 올려주세요.');
-      return;
-    }
-
-    uploadProgress.style.display = 'block';
-
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const dataUrl = ev.target.result;
-      const base64 = dataUrl.split(',')[1];
-      posterData = { base64, fileName: file.name, mimeType: file.type };
-
-      previewImg.src = dataUrl;
-      previewName.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + 'KB)';
-      uploadPreview.style.display = 'block';
-      uploadZone.style.display = 'none';
-      uploadProgress.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  posterFileInput.addEventListener('change', function() {
-    handleFile(this.files[0]);
-  });
-
-  // 드래그 앤 드롭
-  uploadZone.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-  uploadZone.addEventListener('dragleave', function() {
-    uploadZone.classList.remove('drag-over');
-  });
-  uploadZone.addEventListener('drop', function(e) {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    handleFile(e.dataTransfer.files[0]);
-  });
-
-  // 파일 제거
-  removeFileBtn.addEventListener('click', function() {
-    posterData = null;
-    posterFileInput.value = '';
-    previewImg.src = '';
-    uploadPreview.style.display = 'none';
-    uploadZone.style.display = 'block';
-  });
-
-  // ── 폼 제출 ──
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -717,30 +650,18 @@
     if (!space) { alert('희망 공간을 선택해 주세요.'); return; }
     if (!hasMaterials) { alert('재료 준비 여부를 선택해 주세요.'); return; }
 
-    const payload = {
-      month: month.value,
-      meetingName: document.getElementById('meetingName').value.trim(),
-      description: document.getElementById('description').value.trim(),
-      hostName: document.getElementById('hostName').value.trim(),
-      space: space.value,
-      session1: document.getElementById('session1').value.trim(),
-      session2: document.getElementById('session2').value.trim(),
-      session3: document.getElementById('session3').value.trim(),
-      session4: document.getElementById('session4').value.trim(),
-      capacity: document.getElementById('capacity').value.trim(),
-      fee: document.getElementById('fee').value.trim(),
-      hasMaterials: hasMaterials.value,
-      contact: document.getElementById('contact').value.trim(),
-      notes: document.getElementById('notes').value.trim(),
-    };
+    const fee = document.getElementById('fee').value.trim();
+    if (Number(fee) < 5000) { alert('참가비는 최소 5,000원 이상으로 설정해 주세요.'); return; }
 
-    if (!payload.meetingName || !payload.description || !payload.hostName ||
-        !payload.session1 || !payload.capacity || !payload.fee || !payload.contact) {
+    const meetingName = document.getElementById('meetingName').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const hostName    = document.getElementById('hostName').value.trim();
+    const session1    = document.getElementById('session1').value.trim();
+    const capacity    = document.getElementById('capacity').value.trim();
+    const contact     = document.getElementById('contact').value.trim();
+
+    if (!meetingName || !description || !hostName || !session1 || !capacity || !contact) {
       alert('필수 항목(*)을 모두 입력해 주세요.');
-      return;
-    }
-    if (Number(payload.fee) < 5000) {
-      alert('참가비는 최소 5,000원 이상으로 설정해 주세요.');
       return;
     }
 
@@ -748,12 +669,30 @@
     submitBtn.textContent = '제출 중...';
     errorMsg.style.display = 'none';
 
+    // FormData 방식으로 전송 (no-cors + JSON 파싱 문제 우회)
+    const params = new URLSearchParams({
+      month,
+      meetingName,
+      description,
+      hostName,
+      space:        space.value,
+      session1,
+      session2:     document.getElementById('session2').value.trim(),
+      session3:     document.getElementById('session3').value.trim(),
+      session4:     document.getElementById('session4').value.trim(),
+      capacity,
+      fee,
+      hasMaterials: hasMaterials.value,
+      contact,
+      notes:        document.getElementById('notes').value.trim(),
+    });
+
     try {
       await fetch(SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
       });
 
       form.style.display = 'none';
