@@ -437,6 +437,27 @@
       font-family: inherit;
     }
 
+    .drive-upload-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy);
+      text-decoration: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .drive-upload-btn:hover {
+      border-color: var(--blue);
+      background: var(--blue-pale);
+      color: var(--blue);
+    }
+
     .upload-progress {
       display: none;
       margin-top: 8px;
@@ -470,10 +491,7 @@
 
 <div class="container">
 
-  <div class="info-box">
-    <strong>신청 안내</strong><br />
-    포스터 이미지는 JPG·PNG·GIF 형식으로 직접 업로드해 주세요 (최대 5MB).
-  </div>
+
 
   <form id="apply-form" novalidate>
 
@@ -581,30 +599,14 @@
 
     <!-- 4. 호스트 연락처 & 포스터 -->
     <div class="card">
-      <div class="card-title">연락처 & 포스터</div>
+      <div class="card-title">호스트 연락처</div>
 
       <div class="field">
         <label for="contact" class="required">호스트 연락처</label>
         <input type="text" id="contact" name="contact" placeholder="전화번호 또는 인스타그램 계정(@포함)" required />
       </div>
 
-      <div class="field">
-        <label>포스터 이미지</label>
-        <div class="upload-zone" id="upload-zone">
-          <input type="file" id="posterFile" name="posterFile" accept="image/jpeg,image/png,image/gif,image/webp" />
-          <span class="upload-icon">🖼️</span>
-          <span class="upload-label">클릭하거나 이미지를 끌어다 놓으세요</span>
-          <span class="upload-sub">JPG · PNG · GIF · WEBP · 최대 5MB · 선택 사항</span>
-        </div>
-        <div class="upload-preview" id="upload-preview">
-          <img id="preview-img" src="" alt="포스터 미리보기" />
-          <div class="upload-preview-name">
-            <span id="preview-name"></span>
-            <button type="button" class="upload-remove" id="remove-file">✕ 제거</button>
-          </div>
-        </div>
-        <div class="upload-progress" id="upload-progress">이미지 변환 중...</div>
-      </div>
+
 
       <div class="field">
         <label for="notes">기타 요청사항</label>
@@ -742,15 +744,8 @@
       return;
     }
 
-    // 포스터 첨부 (선택)
-    if (posterData) {
-      payload.posterBase64 = posterData.base64;
-      payload.posterFileName = posterData.fileName;
-      payload.posterMimeType = posterData.mimeType;
-    }
-
     submitBtn.disabled = true;
-    submitBtn.textContent = posterData ? '이미지 업로드 중...' : '제출 중...';
+    submitBtn.textContent = '제출 중...';
     errorMsg.style.display = 'none';
 
     try {
